@@ -48,7 +48,12 @@ export default function Home() {
 
       {/* Main Content */}
       <div className="w-full max-w-3xl flex-1">
-        {activeTab === 'create' ? <MemeGenerator /> : <MemeGallery />}
+        <div style={{ display: activeTab === 'create' ? 'block' : 'none' }}>
+          <MemeGenerator />
+        </div>
+        <div style={{ display: activeTab === 'gallery' ? 'block' : 'none' }}>
+          <MemeGallery />
+        </div>
       </div>
     </div>
   )
