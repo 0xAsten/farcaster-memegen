@@ -27,7 +27,7 @@ const MEME_TEMPLATES = templatesData as MemeTemplate[]
 
 export async function POST(req: Request) {
   try {
-    const { prompt, userAddress } = await req.json()
+    const { prompt } = await req.json()
 
     if (!prompt) {
       return NextResponse.json(
@@ -161,7 +161,6 @@ After selecting a template, generate a meme with appropriate text lines (exactly
       message: text,
       success: true,
       userPrompt: prompt,
-      userAddress: userAddress || null,
       memeUrl: generatedMemeUrl,
     })
   } catch (error) {
