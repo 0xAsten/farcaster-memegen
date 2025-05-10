@@ -1,11 +1,18 @@
-import { useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { APP_URL } from '@/lib/constants'
 import { useMiniAppContext } from '@/hooks/use-miniapp-context'
-import { useAccount, useConnect } from 'wagmi'
+import {
+  useAccount,
+  useConnect,
+  useSendTransaction,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from 'wagmi'
 import { farcasterFrame } from '@farcaster/frame-wagmi-connector'
 import { monadTestnet } from 'viem/chains'
 import { useSwitchChain } from 'wagmi'
 import Image from 'next/image'
+import { parseAbi } from 'viem'
 
 export function MemeGenerator() {
   const [prompt, setPrompt] = useState('')
@@ -18,6 +25,39 @@ export function MemeGenerator() {
   const { isConnected, address, chainId } = useAccount()
   const { connect } = useConnect()
   const { switchChain } = useSwitchChain()
+
+  const [txHash, setTxHash] = useState<string | null>(null)
+  const [txStatus, setTxStatus] = useState<
+    'idle' | 'pending' | 'success' | 'error'
+  >('idle')
+  const [txErrorMessage, setTxErrorMessage] = useState<string | null>(null)
+  const {
+    data: hash,
+    writeContract,
+    error: sendTxError,
+    isError: isSendTxError,
+    isPending: isSendTxPending,
+  } = useWriteContract()
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({
+      hash: txHash as `0x${string}`,
+    })
+
+  const MemeNFTAbi = parseAbi([
+    'function mintMeme(string memory tokenURI) public returns (uint256)',
+  ])
+  const mintMemeTx = useCallback(
+    (memeUrl: string) => {
+      writeContract({
+        address: '0x36a9305Eb14906A3676F772375d59b3495dA9c1E',
+        abi: MemeNFTAbi,
+        functionName: 'mintMeme',
+        args: [memeUrl],
+      })
+    },
+    [writeContract, MemeNFTAbi],
+  )
 
   const generateMeme = async () => {
     if (!prompt) return
@@ -81,16 +121,49 @@ export function MemeGenerator() {
       return
     }
 
-    setIsMinting(true)
+    if (!generatedImage) {
+      setTxStatus('error')
+      setTxErrorMessage('Please generate a meme first!')
+      return
+    }
 
-    // This is a placeholder for the actual minting code
-    // In a real implementation, you would call your smart contract
-    setTimeout(() => {
+    setIsMinting(true)
+    setTxStatus('pending')
+    setTxErrorMessage(null)
+    try {
+      mintMemeTx(generatedImage)
+    } catch (error) {
+      console.error('Error minting meme:', error)
+      setTxStatus('error')
+      setTxErrorMessage('Failed to mint meme. Please try again.')
+    } finally {
       setIsMinting(false)
-      // Mock success
-      alert('Meme minted successfully!')
-    }, 2000)
+    }
   }
+
+  // Update the effects to use UI state instead of alerts
+  useEffect(() => {
+    if (hash) {
+      setTxHash(hash)
+      setTxStatus('pending')
+      setTxErrorMessage(null)
+    }
+  }, [hash])
+
+  useEffect(() => {
+    if (isConfirmed) {
+      setTxStatus('success')
+      setTxHash(null)
+    }
+  }, [isConfirmed])
+
+  useEffect(() => {
+    if (isSendTxError && sendTxError) {
+      setTxStatus('error')
+      setTxErrorMessage(sendTxError.message)
+      setIsMinting(false)
+    }
+  }, [isSendTxError, sendTxError])
 
   const shareToFarcaster = () => {
     if (actions && generatedImage) {
@@ -173,14 +246,14 @@ export function MemeGenerator() {
           <div className="flex space-x-2">
             <button
               onClick={mintMeme}
-              disabled={isMinting}
+              disabled={isMinting || txStatus === 'pending'}
               className={`flex-1 py-2 rounded-md font-medium ${
-                isMinting
+                isMinting || txStatus === 'pending'
                   ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                   : 'bg-green-600 text-white hover:bg-green-700'
               }`}
             >
-              {isMinting
+              {isMinting || txStatus === 'pending'
                 ? 'Minting...'
                 : isConnected
                 ? 'Mint as NFT'
@@ -193,6 +266,43 @@ export function MemeGenerator() {
               Share to Farcaster
             </button>
           </div>
+
+          {/* Transaction Status Display */}
+          {txStatus !== 'idle' && (
+            <div
+              className={`mt-4 p-4 rounded-md ${
+                txStatus === 'error'
+                  ? 'bg-red-900/20 border border-red-500 text-red-300'
+                  : txStatus === 'success'
+                  ? 'bg-green-900/20 border border-green-500 text-green-300'
+                  : 'bg-blue-900/20 border border-blue-500 text-blue-300'
+              }`}
+            >
+              {txStatus === 'pending' && (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+                  <p>Transaction pending...</p>
+                </div>
+              )}
+              {txStatus === 'success' && (
+                <div className="flex items-center space-x-2">
+                  <span>✅</span>
+                  <p>Meme minted successfully!</p>
+                </div>
+              )}
+              {txStatus === 'error' && (
+                <div className="flex items-center space-x-2">
+                  <span>❌</span>
+                  <p>{txErrorMessage || 'Transaction failed'}</p>
+                </div>
+              )}
+              {txHash && (
+                <p className="text-sm mt-2 break-all">
+                  Transaction Hash: {txHash}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
 
