@@ -8,6 +8,7 @@ const nextConfig = {
       'via.placeholder.com',
       'cdn.warpcast.com', // For Farcaster profile images
       'res.cloudinary.com',
+      'api.memegen.link',
     ],
     remotePatterns: [
       {

@@ -11,7 +11,9 @@ export function MemeGenerator() {
   const [prompt, setPrompt] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedImage, setGeneratedImage] = useState<string | null>(null)
+  const [imageError, setImageError] = useState<string | null>(null)
   const [isMinting, setIsMinting] = useState(false)
+  const [aiMessage, setAiMessage] = useState<string | null>(null)
   const { context, actions, isEthProviderAvailable } = useMiniAppContext()
   const { isConnected, address, chainId } = useAccount()
   const { connect } = useConnect()
@@ -21,16 +23,51 @@ export function MemeGenerator() {
     if (!prompt) return
 
     setIsGenerating(true)
+    setImageError(null)
+    setGeneratedImage(null)
+    setAiMessage(null)
 
-    // This is a placeholder for the actual API call to generate a meme
-    // In a real implementation, you would call your image generation API
-    setTimeout(() => {
-      // For demo purposes, we're using a placeholder image
-      setGeneratedImage(
-        'https://placehold.co/600x400/9333ea/ffffff?text=Generated+Meme',
+    try {
+      // Call the meme generation API
+      const response = await fetch('/api/generate-meme', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      if (!data.success || !data.memeUrl) {
+        throw new Error('Failed to generate meme')
+      }
+
+      setGeneratedImage(data.memeUrl)
+      setAiMessage(data.message)
+    } catch (error) {
+      console.error('Error generating meme:', error)
+      setImageError(
+        `Failed to generate meme: ${
+          (error as Error).message
+        }. Please try again.`,
       )
+    } finally {
       setIsGenerating(false)
-    }, 2000)
+    }
+  }
+
+  const handleImageError = () => {
+    setImageError(
+      'The generated image is invalid. Please try again with a different prompt.',
+    )
+    setGeneratedImage(null)
   }
 
   const mintMeme = async () => {
@@ -58,7 +95,7 @@ export function MemeGenerator() {
   const shareToFarcaster = () => {
     if (actions && generatedImage) {
       actions.composeCast({
-        text: 'I just created this meme with MemeGen! 🔥',
+        text: `I just created this meme with MemeGen! 🔥 "${prompt}"`,
         embeds: [generatedImage],
       })
     }
@@ -95,6 +132,27 @@ export function MemeGenerator() {
         </div>
       </div>
 
+      {/* Error Message */}
+      {imageError && (
+        <div className="border border-red-500 bg-red-900/20 rounded-md p-4 text-red-300 text-sm">
+          {imageError}
+          <button
+            className="block mt-2 text-white bg-red-600 hover:bg-red-700 px-4 py-1 rounded-md text-xs"
+            onClick={generateMeme}
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {/* AI Message */}
+      {aiMessage && (
+        <div className="border border-[#333] rounded-md p-4 bg-[#1a1a1a] text-gray-300 text-sm">
+          <p className="text-gray-400 font-medium mb-1">AIs thoughts:</p>
+          <p>{aiMessage}</p>
+        </div>
+      )}
+
       {/* Generated Image Display */}
       {generatedImage && (
         <div className="space-y-4">
@@ -106,6 +164,8 @@ export function MemeGenerator() {
               height={400}
               className="max-w-full rounded-md"
               style={{ height: 'auto', maxHeight: '400px' }}
+              onError={handleImageError}
+              priority
             />
           </div>
 
@@ -137,7 +197,7 @@ export function MemeGenerator() {
       )}
 
       {/* Instructions */}
-      {!generatedImage && !isGenerating && (
+      {!generatedImage && !isGenerating && !imageError && (
         <div className="border border-dashed border-[#333] rounded-md p-6 flex flex-col items-center justify-center space-y-3 bg-[#1a1a1a]">
           <div className="text-gray-400 text-5xl">🖼️</div>
           <p className="text-gray-400 text-center max-w-md">
