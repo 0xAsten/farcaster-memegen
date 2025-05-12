@@ -1,58 +1,17 @@
-import { useEffect, useState } from 'react'
+'use client'
+
 import { useAccount, useConnect } from 'wagmi'
 import { farcasterFrame } from '@farcaster/frame-wagmi-connector'
 import { useMiniAppContext } from '@/hooks/use-miniapp-context'
 import Image from 'next/image'
-
-interface MemeNFT {
-  id: string
-  imageUrl: string
-  name: string
-  mintedAt: string
-}
+import { useUserMemes } from '@/lib/graphql/hooks'
+import { MemeNFT } from '@/lib/graphql/queries'
 
 export function MemeGallery() {
-  const [memes, setMemes] = useState<MemeNFT[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const { actions } = useMiniAppContext()
   const { isConnected, address } = useAccount()
   const { connect } = useConnect()
-
-  useEffect(() => {
-    // This is a placeholder for fetching the user's minted memes
-    // In a real implementation, you would query your smart contract or indexer
-    if (isConnected) {
-      setIsLoading(true)
-      // Mock API call delay
-      setTimeout(() => {
-        // Mock data for demonstration
-        setMemes([
-          {
-            id: '1',
-            imageUrl: 'https://placehold.co/600x400/9333ea/ffffff?text=Meme+1',
-            name: 'Funny Cat Meme',
-            mintedAt: '2023-10-15',
-          },
-          {
-            id: '2',
-            imageUrl: 'https://placehold.co/600x400/3b82f6/ffffff?text=Meme+2',
-            name: 'Coding Meme',
-            mintedAt: '2023-10-16',
-          },
-          {
-            id: '3',
-            imageUrl: 'https://placehold.co/600x400/10b981/ffffff?text=Meme+3',
-            name: 'Web3 Meme',
-            mintedAt: '2023-10-18',
-          },
-        ])
-        setIsLoading(false)
-      }, 1500)
-    } else {
-      setMemes([])
-      setIsLoading(false)
-    }
-  }, [isConnected, address])
+  const { memes, isLoading, error } = useUserMemes(address)
 
   const shareMeme = (meme: MemeNFT) => {
     if (actions) {
@@ -85,6 +44,17 @@ export function MemeGallery() {
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <div className="animate-pulse text-gray-400 text-5xl">🔄</div>
         <p className="text-gray-400">Loading your memes...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 space-y-4 border border-dashed border-[#333] rounded-md p-6 bg-[#1a1a1a]">
+        <div className="text-gray-400 text-5xl">⚠️</div>
+        <p className="text-gray-400 text-center">
+          Error loading your memes. Please try again later.
+        </p>
       </div>
     )
   }
@@ -135,7 +105,6 @@ export function MemeGallery() {
             </div>
             <div className="p-4 border-t border-[#333] flex flex-col space-y-2">
               <h3 className="text-white font-medium">{meme.name}</h3>
-              <p className="text-xs text-gray-400">Minted on {meme.mintedAt}</p>
               <div className="flex space-x-2 pt-2">
                 <button
                   onClick={() => shareMeme(meme)}
