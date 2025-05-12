@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { User } from '@/components/Home/User'
 import { MemeGenerator } from './MemeGenerator'
 import { MemeGallery } from './MemeGallery'
@@ -9,11 +9,18 @@ import { useAccount } from 'wagmi'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'create' | 'gallery'>('create')
+  const [shouldRefetch, setShouldRefetch] = useState(false)
   const { context } = useMiniAppContext()
   const { isConnected } = useAccount()
 
+  // Handler for gallery tab click
+  const handleGalleryClick = () => {
+    setActiveTab('gallery')
+    setShouldRefetch(true)
+  }
+
   return (
-    <div className="flex min-h-screen flex-col items-center p-4 space-y-4 bg-[#111]">
+    <div className="flex min-h-screen flex-col items-center p-4 space-y-4 bg-[#111] w-full">
       {/* Header */}
       <div className="w-full max-w-3xl flex flex-row justify-between items-center pt-2">
         <h1 className="text-2xl font-bold text-white">MemeGen</h1>
@@ -39,7 +46,7 @@ export default function Home() {
               ? 'text-white border-b-2 border-purple-500'
               : 'text-gray-400 hover:text-white'
           }`}
-          onClick={() => setActiveTab('gallery')}
+          onClick={handleGalleryClick}
           data-tab="gallery"
         >
           My Gallery
@@ -52,7 +59,11 @@ export default function Home() {
           <MemeGenerator />
         </div>
         <div style={{ display: activeTab === 'gallery' ? 'block' : 'none' }}>
-          <MemeGallery />
+          <MemeGallery
+            isVisible={activeTab === 'gallery'}
+            shouldRefetch={shouldRefetch}
+            onRefetchComplete={() => setShouldRefetch(false)}
+          />
         </div>
       </div>
     </div>

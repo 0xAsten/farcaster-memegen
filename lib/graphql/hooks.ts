@@ -24,5 +24,6 @@ export function useUserMemes(address: string | undefined) {
     memes: transformedMemes,
     isLoading: fetching,
     error,
+    refetch: () => reexecuteQuery({ requestPolicy: 'network-only' }),
   }
 }
