@@ -168,7 +168,7 @@ export function MemeGenerator() {
   const shareToFarcaster = () => {
     if (actions && generatedImage) {
       actions.composeCast({
-        text: `I just created this meme with Meme AI Assistant! 🔥 "${prompt}"`,
+        text: `I just created this meme with Meme AI Assistant! 🔥 "${prompt}"\n\nCreate your own meme at: https://warpcast.com/miniapps/bJ_dfhkjZK58/monad-meme-ai-assistant`,
         embeds: [generatedImage],
       })
     }
