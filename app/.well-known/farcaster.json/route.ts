@@ -19,7 +19,7 @@ export async function GET() {
       imageUrl: `${APP_URL}/images/feed.png`,
       screenshotUrls: [],
       tags: ['monad', 'farcaster', 'miniapp', 'meme', 'ai'],
-      primaryCategory: 'social-media',
+      primaryCategory: 'social',
       buttonTitle: 'Launch AI Assistant',
       splashImageUrl: `${APP_URL}/images/splash.png`,
       splashBackgroundColor: '#ffffff',
