@@ -168,7 +168,7 @@ export function MemeGenerator() {
   const shareToFarcaster = () => {
     if (actions && generatedImage) {
       actions.composeCast({
-        text: `I just created this meme with MemeGen! 🔥 "${prompt}"`,
+        text: `I just created this meme with Meme AI Assistant! 🔥 "${prompt}"`,
         embeds: [generatedImage],
       })
     }
