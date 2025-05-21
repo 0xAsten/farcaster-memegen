@@ -1,4 +1,4 @@
-# MemeGen - Farcaster MiniApp
+# Meme AI Assitant - Farcaster MiniApp
 
 A Farcaster MiniApp that allows users to generate, mint, and share meme images with just a text prompt.
 
