@@ -46,7 +46,7 @@ export function MemeGallery({
   const shareMeme = (meme: MemeNFT) => {
     if (actions) {
       actions.composeCast({
-        text: `Check out this meme I created with MemeGen! 🔥 "${meme.name}"`,
+        text: `Check out this meme I created with Meme AI Assistant! 🔥 "${meme.name}"`,
         embeds: [meme.imageUrl],
       })
     }

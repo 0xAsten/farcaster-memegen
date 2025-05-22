@@ -6,6 +6,7 @@ import { MemeGenerator } from './MemeGenerator'
 import { MemeGallery } from './MemeGallery'
 import { useMiniAppContext } from '@/hooks/use-miniapp-context'
 import { useAccount } from 'wagmi'
+import MemeSignIn from '@/components/MemeSignIn'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'create' | 'gallery'>('create')
@@ -20,20 +21,25 @@ export default function Home() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center p-4 space-y-4 bg-[#111] w-full">
+    <div className="flex min-h-screen flex-col items-center p-4 space-y-6 bg-[#111] w-full">
       {/* Header */}
       <div className="w-full max-w-3xl flex flex-row justify-between items-center pt-2">
-        <h1 className="text-2xl font-bold text-white">MemeGen</h1>
+        <h1 className="text-2xl font-bold text-white">AI Assistant</h1>
         <User compact />
       </div>
 
+      {/* MemeSignIn Component */}
+      <div className="w-full max-w-3xl">
+        <MemeSignIn />
+      </div>
+
       {/* Tab Selector */}
-      <div className="w-full max-w-3xl flex border-b border-[#333]">
+      <div className="w-full max-w-3xl flex border-b border-[#333] mt-6">
         <button
-          className={`px-4 py-2 text-sm font-medium ${
+          className={`px-6 py-3 text-sm font-medium transition-colors duration-200 ${
             activeTab === 'create'
               ? 'text-white border-b-2 border-purple-500'
-              : 'text-gray-400 hover:text-white'
+              : 'text-gray-400 hover:text-white hover:bg-[#222] rounded-t-md'
           }`}
           onClick={() => setActiveTab('create')}
           data-tab="create"
@@ -41,10 +47,10 @@ export default function Home() {
           Create Meme
         </button>
         <button
-          className={`px-4 py-2 text-sm font-medium ${
+          className={`px-6 py-3 text-sm font-medium transition-colors duration-200 ${
             activeTab === 'gallery'
               ? 'text-white border-b-2 border-purple-500'
-              : 'text-gray-400 hover:text-white'
+              : 'text-gray-400 hover:text-white hover:bg-[#222] rounded-t-md'
           }`}
           onClick={handleGalleryClick}
           data-tab="gallery"

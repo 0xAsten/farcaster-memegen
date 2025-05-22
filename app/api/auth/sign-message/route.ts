@@ -11,7 +11,12 @@ export async function POST(request: NextRequest) {
     const { userAddress, nonce, contractAddress } = await request.json()
 
     // Validate input
-    if (!userAddress || !nonce || !contractAddress) {
+    if (
+      !userAddress ||
+      nonce === undefined ||
+      nonce === null ||
+      !contractAddress
+    ) {
       return NextResponse.json(
         { error: 'Missing required parameters' },
         { status: 400 },
