@@ -115,7 +115,7 @@ export default function MemeSignIn() {
   const [txHash, setTxHash] = useState<string | null>(null)
 
   // Read user's nonce from the contract
-  const { data: nonce } = useReadContract({
+  const { data: nonce, refetch: refetchNonce } = useReadContract({
     address: address
       ? (MEME_AUTH_CONTRACT_ADDRESS as `0x${string}`)
       : undefined,
@@ -125,17 +125,18 @@ export default function MemeSignIn() {
   })
 
   // Read user's last sign-in time
-  const { data: lastSignInTime } = useReadContract({
-    address: address
-      ? (MEME_AUTH_CONTRACT_ADDRESS as `0x${string}`)
-      : undefined,
-    abi: MEME_AUTH_ABI,
-    functionName: 'lastSignInTime',
-    args: address ? [address] : undefined,
-  })
+  const { data: lastSignInTime, refetch: refetchLastSignInTime } =
+    useReadContract({
+      address: address
+        ? (MEME_AUTH_CONTRACT_ADDRESS as `0x${string}`)
+        : undefined,
+      abi: MEME_AUTH_ABI,
+      functionName: 'lastSignInTime',
+      args: address ? [address] : undefined,
+    })
 
   // Read user's XP
-  const { data: userXP } = useReadContract({
+  const { data: userXP, refetch: refetchUserXP } = useReadContract({
     address: address
       ? (MEME_AUTH_CONTRACT_ADDRESS as `0x${string}`)
       : undefined,
@@ -162,8 +163,13 @@ export default function MemeSignIn() {
     if (isConfirmed) {
       setSignInStatus('success')
       setTxHash(null)
+
+      // Refetch contract data after successful sign-in
+      refetchNonce?.()
+      refetchLastSignInTime?.()
+      refetchUserXP?.()
     }
-  }, [isConfirmed])
+  }, [isConfirmed, refetchNonce, refetchLastSignInTime, refetchUserXP])
 
   // Check if user can sign in (once per day)
   useEffect(() => {
